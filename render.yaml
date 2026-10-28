@@ -1,25 +1,33 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
 #
-# The backend lives in a subdirectory, so rootDir points there and every
-# command below runs relative to it.
+# One service, one URL: this Node process serves both static apps and the API
+# (backend/app.js), so the browser only ever talks to a single origin and
+# CORS never comes into it.
 #
-# DATABASE_URL is deliberately absent a value. `sync: false` means Render
-# prompts for it and stores it in the dashboard, so the connection string
-# never lands in this repo. PORT is not listed at all: Render assigns it and
-# server.js reads it from the environment.
+# Root directory is the repository root, not backend/. The start command in
+# the root package.json runs backend/server.js, and the pages are read from
+# disk next to it.
+#
+# DATABASE_URL has no value here on purpose. `sync: false` means Render asks
+# for it in the dashboard and stores it there, so the connection string never
+# lands in this repo. PORT is not listed: Render assigns it and server.js
+# reads it from the environment.
 
 services:
   - type: web
-    name: sharijavuba-backend
+    name: sharijavuba
     runtime: node
     plan: free
-    # The Neon database is in eu-central-1, so keep the API in the same
-    # region; a cross-continent hop on every query is the easiest latency
-    # to avoid.
+    # Neon is in eu-central-1, so keep the app in the same region; a
+    # cross-continent hop on every query is the easiest latency to avoid.
     region: frankfurt
-    rootDir: backend
     buildCommand: npm ci
     startCommand: npm start
+    healthCheckPath: /api/healthz
     envVars:
       - key: DATABASE_URL
+        sync: false
+      # Optional: where queue events are posted for the n8n workflow. Left
+      # empty, the backend skips the webhook and nothing else changes.
+      - key: N8N_WEBHOOK_URL
         sync: false

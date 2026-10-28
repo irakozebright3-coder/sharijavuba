@@ -7,11 +7,12 @@ against a running server. Nothing here is inferred.
 
 Base URL: `http://localhost:3000` (`PORT` env var, defaults to `3000`).
 
-On Vercel the same routes are served under `/api`, from the one function in
-[`api/[...path].js`](api/%5B...path%5D.js), which strips that prefix and hands
-the request to `backend/app.js`. So `/stations` locally is `/api/stations` in
-production, and the front ends default to the same origin for exactly that
-reason. `?api=https://host` still points a page at any other backend.
+Every route is served twice, from the same handlers: at the root
+(`/stations`) and under `/api` (`/api/stations`). The root mount is what the
+USSD simulator and the curl examples below use; the `/api` mount is what the
+front ends use, because a host that serves the pages and the API from one
+origin (Render, Vercel) needs a prefix to tell them apart. `?api=https://host`
+still points a page at any other backend.
 
 All request bodies are JSON and need `Content-Type: application/json`.
 There is no authentication and no rate limiting.

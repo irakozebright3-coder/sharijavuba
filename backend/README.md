@@ -40,9 +40,10 @@ slot from blocking the queue forever.
   claim that goes quiet past the grace window slips back once and
   returns to `waiting`; one that has already used that chance, or whose
   tail deadline has passed, is closed out as `no_show`.
-- `app.js`, the Express app: every route, CORS, and the error handler.
-  It starts nothing, so the same routes run on a normal server and as a
-  serverless function.
+- `app.js`, the Express app: the two static apps, every route, CORS, and the
+  error handler. It starts nothing, so the same code runs on a normal server
+  and as a serverless function. Routes are mounted twice, at the root and
+  under `/api`, so one process can serve pages and API on one origin.
 - `server.js`, the long-lived entry point (Render, a laptop): `app.js` plus
   the sweep on a one-minute timer.
 - `queue/opportunisticSweep.js`, the same sweep driven by traffic, throttled
@@ -68,15 +69,27 @@ npm run migrate
 npm start
 ```
 
-## Deploying on Vercel
+## Deploying on Render
 
-The repository root deploys as one Vercel project: the two static apps plus
-`api/[...path].js`, which is this same Express app. No build step, no second
-service. Set `DATABASE_URL` (a Neon `-pooler` string is the right shape for
-serverless), run `npm run migrate` against it once, and check
-`/api/healthz` reports `database: postgres`. Without `DATABASE_URL` the API
-still answers, on the in-memory demo database that each instance keeps to
-itself.
+The repository root deploys as one Render web service; `render.yaml` is the
+blueprint. Root directory is the root (not this folder), build `npm ci`, start
+`npm start`, health check `/api/healthz`. That single service serves `/rider`,
+`/station` and the API on one origin.
+
+Set `DATABASE_URL` to a Neon connection string (not a free Render Postgres: it
+expires after 30 days), run `npm run migrate` against it once, and check
+`/api/healthz` reports `database: postgres`.
+
+On the free plan the service sleeps after 15 minutes of no traffic and takes
+30-50 seconds to wake. The station app polls every three seconds, so it stays
+awake while anyone is using it.
+
+## Deploying on Vercel (alternative)
+
+The same repository root also deploys as one Vercel project: the static apps
+plus `api/[...path].js`, which is this same Express app. No build step, no
+second service. Without `DATABASE_URL` the API still answers, on the in-memory
+demo database that each instance keeps to itself.
 
 ## USSD simulator
 
@@ -85,12 +98,10 @@ npm run ussd                                 # against the deployed API
 API_URL=http://localhost:3000 npm run ussd   # against a local backend
 ```
 
-Point it at any deploy with `API_URL`, including a Vercel one
-(`API_URL=https://your-app.vercel.app/api npm run ussd`).
-It defaults to `https://sharijavuba-backend.onrender.com`, so it works from a
-clean checkout with nothing running locally. On the free plan that instance
-sleeps after a quiet spell, so the first screen can take up to a minute to
-appear while it wakes.
+Point it at any deploy with `API_URL` (with or without the `/api` prefix).
+It defaults to `https://sharijavuba.onrender.com`, the service name in
+`render.yaml`. On the free plan that service sleeps after 15 minutes of no
+traffic, so the first screen can take 30-50 seconds while it wakes.
 
 `ussd/ussd.mjs` renders a feature-phone session for `*111*1#`: dial, pick a
 station from the live queue lengths, type a plate, confirm. It is Kinyarwanda

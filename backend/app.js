@@ -1,5 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { reserveClaim } from './queue/reserveClaim.js';
 import { callNext } from './queue/nextClaim.js';
 import { markArrived } from './queue/arrived.js';
@@ -21,14 +23,19 @@ import { SLOW_MINUTES } from './queue/constants.js';
 import { usingDemoDatabase } from './db/index.js';
 
 /**
- * The HTTP surface, exported as a plain request handler.
+ * The whole product in one process: the two static apps and the API.
  *
  * Nothing here starts a listener or a timer. `server.js` owns those for a
  * long-lived host (Render, a laptop), and the Vercel entry point in `api/`
- * calls the same app per request. Keeping the routes in one place is what
+ * calls the same app per request. Keeping everything in one place is what
  * stops the two deployment shapes from drifting apart.
  */
 const app = express();
+
+// Repo root, one level up from backend/. The static apps and strings.rw.js
+// are served from disk rather than copied, so the page a host serves and the
+// page in the repo are the same file.
+const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Hosting platforms differ on who reads the JSON body. Vercel's Node
 // runtime hands the function an already-parsed `req.body`, and express.json()
@@ -44,7 +51,9 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // CORS: configure FRONTEND_ORIGINS as a comma-separated list in production.
-// If unset, allow all origins for local/demo use only.
+// If unset, allow all origins for local/demo use only. It is not needed at
+// all when this process serves the pages too, which is the Render setup: the
+// browser only ever talks to one origin.
 const allowedOrigins = (process.env.FRONTEND_ORIGINS || '*')
   .split(',')
   .map((origin) => origin.trim())
@@ -64,15 +73,36 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- the static apps ---------------------------------------------------
+//
+// Mounted explicitly rather than by serving the repo root, so backend/
+// source, package.json and the rest of the tree are not downloadable from a
+// deployed service. Only these three things are ever public.
+app.get('/', (_req, res) => res.sendFile(join(ROOT_DIR, 'index.html')));
+app.get(['/rider', '/rider/'], (_req, res) =>
+  res.sendFile(join(ROOT_DIR, 'rider-app', 'index.html'))
+);
+app.get(['/station', '/station/'], (_req, res) =>
+  res.sendFile(join(ROOT_DIR, 'station-app', 'index.html'))
+);
+app.use('/rider-app', express.static(join(ROOT_DIR, 'rider-app')));
+app.use('/station-app', express.static(join(ROOT_DIR, 'station-app')));
+app.get('/strings.rw.js', (_req, res) =>
+  res.sendFile(join(ROOT_DIR, 'strings.rw.js'))
+);
+
+// --- the API -----------------------------------------------------------
+const api = express.Router();
+
 // Health check for the hosting provider. This confirms the process is alive;
 // database-dependent routes will still report their own errors if DB is down.
 // `database` says which store is actually in play, because a deploy that
 // silently fell back to the in-memory demo database otherwise looks healthy
 // while sharing nothing between instances.
-app.get('/healthz', (_req, res) => {
+api.get('/healthz', (_req, res) => {
   res.status(200).json({
     ok: true,
-    service: 'sharijavuba-backend',
+    service: 'sharijavuba',
     runtime: process.env.VERCEL ? 'vercel' : 'node',
     database: usingDemoDatabase ? 'demo (in-memory)' : 'postgres',
   });
@@ -81,7 +111,7 @@ app.get('/healthz', (_req, res) => {
 // --- reads, for the station app ---
 
 // Every station, for the app's station picker
-app.get('/stations', async (req, res, next) => {
+api.get('/stations', async (req, res, next) => {
   try {
     res.json(await listStations());
   } catch (err) {
@@ -90,7 +120,7 @@ app.get('/stations', async (req, res, next) => {
 });
 
 // How long every queue is, one row per station per battery type
-app.get('/stations/summary', async (req, res, next) => {
+api.get('/stations/summary', async (req, res, next) => {
   try {
     res.json(await stationsSummary());
   } catch (err) {
@@ -99,7 +129,7 @@ app.get('/stations/summary', async (req, res, next) => {
 });
 
 // Battery types already in use, for the app's battery picker
-app.get('/battery-types', async (req, res, next) => {
+api.get('/battery-types', async (req, res, next) => {
   try {
     res.json(await listBatteryTypes());
   } catch (err) {
@@ -112,7 +142,7 @@ app.get('/battery-types', async (req, res, next) => {
 // rather than being a second poll: the station app already asks for this
 // every few seconds, and the two lists have to agree with each other or the
 // screen contradicts itself.
-app.get('/stations/:stationId/queue', async (req, res, next) => {
+api.get('/stations/:stationId/queue', async (req, res, next) => {
   try {
     const { stationId } = req.params;
     const { battery_type } = req.query;
@@ -142,7 +172,7 @@ app.get('/stations/:stationId/queue', async (req, res, next) => {
 
 // Called riders who have not arrived within SLOW_MINUTES. Every battery
 // type at the station unless one is named.
-app.get('/stations/:stationId/slow', async (req, res, next) => {
+api.get('/stations/:stationId/slow', async (req, res, next) => {
   try {
     const { stationId } = req.params;
     const { battery_type } = req.query;
@@ -159,7 +189,7 @@ app.get('/stations/:stationId/slow', async (req, res, next) => {
 });
 
 // One claim by id, with its place in line while it is still queueing
-app.get('/claims/:claimId', async (req, res, next) => {
+api.get('/claims/:claimId', async (req, res, next) => {
   try {
     const { claimId } = req.params;
     const claim = await getClaim(claimId);
@@ -177,7 +207,7 @@ app.get('/claims/:claimId', async (req, res, next) => {
 // Absolute, not a delta: the +/- buttons in the station app send the value
 // they want, so two attendants adjusting at once end on a number one of
 // them chose rather than on the sum of both taps.
-app.patch('/stations/:stationId', async (req, res, next) => {
+api.patch('/stations/:stationId', async (req, res, next) => {
   try {
     const { stationId } = req.params;
     const { batteries_available } = req.body;
@@ -195,7 +225,7 @@ app.patch('/stations/:stationId', async (req, res, next) => {
 });
 
 // Rider taps "yes" on the app's advice (claim_made)
-app.post('/claims', async (req, res, next) => {
+api.post('/claims', async (req, res, next) => {
   try {
     const { rider_id, station_id, battery_type, plate_number, event_id } = req.body;
     if (!rider_id || !station_id || !battery_type || !plate_number) {
@@ -212,7 +242,7 @@ app.post('/claims', async (req, res, next) => {
 });
 
 // Attendant presses NEXT (called)
-app.post('/stations/:stationId/next', async (req, res, next) => {
+api.post('/stations/:stationId/next', async (req, res, next) => {
   try {
     const { stationId } = req.params;
     const { battery_type } = req.body;
@@ -226,7 +256,7 @@ app.post('/stations/:stationId/next', async (req, res, next) => {
 });
 
 // Rider taps ARRIVED at the geofence (arrived)
-app.post('/claims/:claimId/arrived', async (req, res, next) => {
+api.post('/claims/:claimId/arrived', async (req, res, next) => {
   try {
     const { claimId } = req.params;
     const { event_id } = req.body;
@@ -240,7 +270,7 @@ app.post('/claims/:claimId/arrived', async (req, res, next) => {
 });
 
 // Attendant confirms the swap happened (served)
-app.post('/claims/:claimId/served', async (req, res, next) => {
+api.post('/claims/:claimId/served', async (req, res, next) => {
   try {
     const { claimId } = req.params;
     const result = await markServed(claimId);
@@ -253,7 +283,7 @@ app.post('/claims/:claimId/served', async (req, res, next) => {
 });
 
 // Rider gives up their slot (claim_released, reason 'manual')
-app.post('/claims/:claimId/release', async (req, res, next) => {
+api.post('/claims/:claimId/release', async (req, res, next) => {
   try {
     const { claimId } = req.params;
     const result = await releaseClaim(claimId);
@@ -270,10 +300,10 @@ app.post('/claims/:claimId/release', async (req, res, next) => {
 // A long-lived server runs the sweep on a timer. A serverless host has no
 // timer between requests, so the same sweep also runs opportunistically on
 // incoming traffic (see queue/opportunisticSweep.js). This endpoint exists
-// for an external scheduler that wants the sweep to keep happening while
+// for an outside scheduler that wants the sweep to keep happening while
 // nobody has the apps open, and it is the only route that needs a secret:
 // with CRON_SECRET unset it stays closed rather than open.
-app.all('/cron/sweep', async (req, res) => {
+api.all('/cron/sweep', async (req, res) => {
   const secret = process.env.CRON_SECRET;
   if (!secret) return res.status(503).json({ error: 'cron_secret_not_configured' });
   const given = (req.get('authorization') || '').replace(/^Bearer\s+/i, '');
@@ -291,6 +321,17 @@ app.all('/cron/sweep', async (req, res) => {
     res.status(500).json({ error: 'internal_error' });
   }
 });
+
+// The API answers on two mounts, and both matter:
+//
+// - `/api/*` is what the frontends use, and it is the only mount a serverless
+//   host can expose. Same origin as the pages there and here, so no CORS and
+//   nothing to configure.
+// - the root is where API.md, the USSD simulator and the curl examples point,
+//   so an existing client keeps working untouched.
+app.get('/api', (_req, res) => res.redirect(307, '/api/healthz'));
+app.use(api);
+app.use('/api', api);
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -3,15 +3,17 @@
  * Every screen is a real HTTP call, so a claim made here is an ordinary
  * claim and appears in the station app like any other.
  *
- *   API_URL=https://ADERESI-YA-VERCEL/api npm run ussd   # a Vercel deploy
+ *   npm run ussd                                         # the Render deploy
  *   API_URL=http://localhost:3000 npm run ussd           # a local backend
- *   npm run ussd                                         # the Render fallback
+ *
+ * API_URL takes a base URL with or without the /api prefix: both mounts
+ * answer (see API.md).
  */
 import { createInterface } from 'node:readline/promises';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 
-const API = process.env.API_URL || 'https://sharijavuba-backend.onrender.com';
+const API = (process.env.API_URL || 'https://sharijavuba.onrender.com').replace(/\/+$/, '');
 const BATTERY = process.env.USSD_BATTERY || 'standard';
 const CODE = '*111*1#';
 const WIDTH = 38;
