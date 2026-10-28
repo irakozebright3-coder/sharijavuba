@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Environment — .env.example is committed, real secrets are not
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor junk
+.vscode/
+.idea/
+*.swp
+*~

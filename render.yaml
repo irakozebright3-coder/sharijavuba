@@ -1,0 +1,25 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+#
+# The backend lives in a subdirectory, so rootDir points there and every
+# command below runs relative to it.
+#
+# DATABASE_URL is deliberately absent a value. `sync: false` means Render
+# prompts for it and stores it in the dashboard, so the connection string
+# never lands in this repo. PORT is not listed at all: Render assigns it and
+# server.js reads it from the environment.
+
+services:
+  - type: web
+    name: sharijavuba-backend
+    runtime: node
+    plan: free
+    # The Neon database is in eu-central-1, so keep the API in the same
+    # region; a cross-continent hop on every query is the easiest latency
+    # to avoid.
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false

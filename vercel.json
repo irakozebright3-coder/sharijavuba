@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/station",
+      "destination": "/station-app/index.html"
+    },
+    {
+      "source": "/station/:path*",
+      "destination": "/station-app/:path*"
+    },
+    {
+      "source": "/rider",
+      "destination": "/rider-app/index.html"
+    },
+    {
+      "source": "/rider/:path*",
+      "destination": "/rider-app/:path*"
+    }
+  ]
+}

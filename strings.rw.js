@@ -1,0 +1,343 @@
+// Byakozwe muri strings.rw.json. Hindura dosiye ya JSON, ntuhindure iyi dosiye intoki.
+window.SHARIJAVUBA_STRINGS = {
+  "battery.long_range": {
+    "en": "long range",
+    "rw": "Ndende"
+  },
+  "battery.standard": {
+    "en": "standard",
+    "rw": "Isanzwe"
+  },
+  "notif.called": {
+    "en": "It is your turn. Come to the station now with plate {plate}.",
+    "rw": "Ugezeho. Ngwino kuri sitasiyo nonaha uzanye {plate}."
+  },
+  "notif.noShow": {
+    "en": "Your slot has expired. Take a new slot when you are ready.",
+    "rw": "Ukozeho byarangiye. Uzongere ufatireho undi murongo n'ubona ugeze hafi."
+  },
+  "notif.reserved": {
+    "en": "Booked. Plate {plate}, you are number {place} in the queue.",
+    "rw": "Plaque {plate}, uri uwa {place} mu murongo."
+  },
+  "notif.slipped": {
+    "en": "You missed your turn. You are still in the queue, now number {place}.",
+    "rw": "Warengejeho. Ukiri mu murongo, ubu uri nimero {place}."
+  },
+  "rider.arrivedButton": {
+    "en": "ARRIVED",
+    "rw": "Hageze"
+  },
+  "rider.batteryType": {
+    "en": "Battery type",
+    "rw": "Ubwoko bwa Bateri"
+  },
+  "rider.chooseStation": {
+    "en": "Choose a station",
+    "rw": "Hitamo sitasiyo"
+  },
+  "rider.errNoPlate": {
+    "en": "Write your plate number first.",
+    "rw": "Shyiramo Plaque"
+  },
+  "rider.errNoStation": {
+    "en": "Choose a station first.",
+    "rw": "Banza uhitemo sitasiyo."
+  },
+  "rider.errReserveFailed": {
+    "en": "Could not book a slot. Try again.",
+    "rw": "Byanze, ongera"
+  },
+  "rider.hintPlate": {
+    "en": "The plate you see back is the one saved.",
+    "rw": "Plaque ubona niyo yabitswe."
+  },
+  "rider.hintStation": {
+    "en": "Pick your station.",
+    "rw": "Hitamo sitasiyo."
+  },
+  "rider.inQueue": {
+    "en": "in the queue",
+    "rw": "Mu murongo"
+  },
+  "rider.msgArrived": {
+    "en": "You have checked in at the station.",
+    "rw": "Wanditse kuri sitasiyo."
+  },
+  "rider.msgReleased": {
+    "en": "Your slot has been released.",
+    "rw": "Umwanya wawe warekuwe."
+  },
+  "rider.msgReserved": {
+    "en": "Your slot is reserved.",
+    "rw": "Umwanya wawe urafashwe"
+  },
+  "rider.msgShowingSaved": {
+    "en": "Showing your last saved slot.",
+    "rw": "Aho wabitse bwa nyuma."
+  },
+  "rider.placeInLine": {
+    "en": "Place in line",
+    "rw": "Aho ugeze"
+  },
+  "rider.plate": {
+    "en": "Plate",
+    "rw": "Plaque"
+  },
+  "rider.plateNumber": {
+    "en": "Plate number",
+    "rw": "Plaque"
+  },
+  "rider.recommended": {
+    "en": "Recommended",
+    "rw": "Ni nziza"
+  },
+  "rider.releaseButton": {
+    "en": "Release slot",
+    "rw": "Rekura umwanya"
+  },
+  "rider.reserveButton": {
+    "en": "Reserve my slot",
+    "rw": "Fata umwanya"
+  },
+  "rider.reserveHeading": {
+    "en": "Reserve a slot",
+    "rw": "Fata umwanya"
+  },
+  "rider.station": {
+    "en": "Station",
+    "rw": "Sitasiyo"
+  },
+  "rider.status": {
+    "en": "Status",
+    "rw": "Uko uhagaze"
+  },
+  "rider.subtitle": {
+    "en": "Battery swap queue",
+    "rw": "Bateri ku murongo"
+  },
+  "rider.yourQueue": {
+    "en": "Your queue",
+    "rw": "Umurongo wawe"
+  },
+  "station.ariaOneFewer": {
+    "en": "One fewer battery",
+    "rw": "Kuramo bateri imwe"
+  },
+  "station.ariaOneMore": {
+    "en": "One more battery",
+    "rw": "Ongeraho bateri imwe"
+  },
+  "station.batteriesAvailable": {
+    "en": "Batteries available",
+    "rw": "Bateri zihari"
+  },
+  "station.colAction": {
+    "en": "Action",
+    "rw": "Gukora"
+  },
+  "station.colPlate": {
+    "en": "Plate",
+    "rw": "Plaque"
+  },
+  "station.colPosition": {
+    "en": "Position",
+    "rw": "Umwanya"
+  },
+  "station.colStatus": {
+    "en": "Status",
+    "rw": "Uko uhagaze"
+  },
+  "station.countComing": {
+    "en": "coming",
+    "rw": "Baraje"
+  },
+  "station.countLate": {
+    "en": "late",
+    "rw": "Batinze"
+  },
+  "station.countWaiting": {
+    "en": "waiting",
+    "rw": "Barindiriye"
+  },
+  "station.errApiUnreachable": {
+    "en": "Could not reach the server.",
+    "rw": "Ntibyakunze kugera kuri seriveri."
+  },
+  "station.errBatteryUpdate": {
+    "en": "Could not update the battery count.",
+    "rw": "Ntibyakunze guhindura umubare wa bateri."
+  },
+  "station.errNextFailed": {
+    "en": "NEXT failed.",
+    "rw": "Komeza byanze."
+  },
+  "station.errQueueLoad": {
+    "en": "Could not load the queue.",
+    "rw": "Ntibyakunze kureba umurongo."
+  },
+  "station.errServeFailed": {
+    "en": "SERVE did not work.",
+    "rw": "Akira byanze."
+  },
+  "station.justLeft": {
+    "en": "Riders who just left the queue",
+    "rw": "Abavuye ku murongo"
+  },
+  "station.lastAttemptFailed": {
+    "en": "Last attempt failed at",
+    "rw": "Byanze"
+  },
+  "station.loadingStations": {
+    "en": "Loading stations...",
+    "rw": "Kureba sitasiyo..."
+  },
+  "station.minWaiting": {
+    "en": "min waiting",
+    "rw": "iminota"
+  },
+  "station.next": {
+    "en": "NEXT",
+    "rw": "Komeza"
+  },
+  "station.noStationsError": {
+    "en": "No stations exist yet. Add one first.",
+    "rw": "Nta sitasiyo irahari. Banza wongeremo imwe."
+  },
+  "station.noStationsOption": {
+    "en": "No stations",
+    "rw": "Nta sitasiyo ihari"
+  },
+  "station.nobodyForBattery": {
+    "en": "Nobody was waiting for that battery.",
+    "rw": "Nta wayitegereje"
+  },
+  "station.nobodyWaiting": {
+    "en": "Nobody waiting.",
+    "rw": "Nta murongo"
+  },
+  "station.notPolling": {
+    "en": "Not checking yet.",
+    "rw": "Ntabwo turareba."
+  },
+  "station.noteArrived": {
+    "en": "The rider has arrived.",
+    "rw": "Moto yageze"
+  },
+  "station.noteCalled": {
+    "en": "Waiting for the rider to arrive.",
+    "rw": "Moto iraje"
+  },
+  "station.noteNoShow": {
+    "en": "Marked as did not come.",
+    "rw": "Yabuze"
+  },
+  "station.noteReleased": {
+    "en": "Rider released this slot.",
+    "rw": "Moto yarekuye umwanya."
+  },
+  "station.noteServed": {
+    "en": "Swap confirmed.",
+    "rw": "Swapa irakozwe"
+  },
+  "station.noteWaiting": {
+    "en": "Slipped back into the queue, grace window expired.",
+    "rw": "Yasubiye mu murongo, igihe cyarangiye."
+  },
+  "station.nothingYet": {
+    "en": "Nothing yet.",
+    "rw": "Nta kiraboneka"
+  },
+  "station.nowCalling": {
+    "en": "Now calling",
+    "rw": "Irahamagara"
+  },
+  "station.pickerSection": {
+    "en": "Station and battery type",
+    "rw": "Sitasiyo n'ubwoko bwa bateri"
+  },
+  "station.queue": {
+    "en": "Queue",
+    "rw": "Umurongo"
+  },
+  "station.serve": {
+    "en": "SERVE",
+    "rw": "Akira"
+  },
+  "station.slippedOnce": {
+    "en": "slipped once",
+    "rw": "yarengejweho rimwe"
+  },
+  "station.slowNone": {
+    "en": "Nobody is overdue. Everyone called has turned up.",
+    "rw": "Nta watinze. Abahamagawe bose barahageze."
+  },
+  "station.slowRiders": {
+    "en": "SLOW RIDERS",
+    "rw": "ABATINZE"
+  },
+  "station.slowSub": {
+    "en": "Called, still not here · {min}+ min",
+    "rw": "Bahamagawe ntibaraje · iminota {min}+"
+  },
+  "station.title": {
+    "en": "Station",
+    "rw": "Sitasiyo"
+  },
+  "station.updated": {
+    "en": "Updated",
+    "rw": "Byavuguruwe"
+  },
+  "status.arrived": {
+    "en": "Arrived",
+    "rw": "Hageze"
+  },
+  "status.called": {
+    "en": "Called",
+    "rw": "Hamagawe"
+  },
+  "status.no_show": {
+    "en": "No show",
+    "rw": "Ntiyaje"
+  },
+  "status.released": {
+    "en": "Released",
+    "rw": "Yagiye"
+  },
+  "status.served": {
+    "en": "Served",
+    "rw": "Yahawe"
+  },
+  "status.waiting": {
+    "en": "Waiting",
+    "rw": "Kurindira"
+  },
+  "ussd.cancel": {
+    "en": "Cancel",
+    "rw": "Subira"
+  },
+  "ussd.checkPlace": {
+    "en": "Check your place",
+    "rw": "Reba aho ugeze"
+  },
+  "ussd.confirm": {
+    "en": "Confirm",
+    "rw": "Emeza"
+  },
+  "ussd.enterPlate": {
+    "en": "Write your plate number",
+    "rw": "Andika Plaque yawe."
+  },
+  "ussd.exit": {
+    "en": "Exit",
+    "rw": "Sohoka"
+  },
+  "ussd.invalid": {
+    "en": "Wrong choice",
+    "rw": "Wibeshye"
+  },
+  "ussd.noClaim": {
+    "en": "You have no slot yet",
+    "rw": "Nturabona slot."
+  }
+};

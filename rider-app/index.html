@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="rw">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>SharijaVuba · Umumotari</title>
+    <style>
+      /* Bootstrap-4 era functional dashboard. Flat fills, one border
+         weight, one shadow, 4px corners. No gradients, no blur, no
+         translucent surfaces: every panel is an opaque colour, so the page
+         reads the same on whatever screen a rider actually owns. */
+      :root {
+        --bg: #f5f5f5;
+        --card: #ffffff;
+        --line: #dee2e6;
+        --line-strong: #ced4da;
+        --shadow: 0 1px 3px rgba(0, 0, 0, .12);
+
+        --text: #212529;
+        --muted: #6c757d;
+
+        --primary: #28a745;
+        --primary-dark: #1e7e34;
+        --primary-darker: #19692c;
+
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --info: #17a2b8;
+        --secondary: #6c757d;
+        --secondary-dark: #545b62;
+      }
+
+      * { box-sizing: border-box; }
+
+      /* The status card and the ARRIVED button are toggled with the hidden
+         attribute and with .visible. Both .card and the button classes set
+         display, which would otherwise beat the UA rule for [hidden]. */
+      [hidden] { display: none !important; }
+
+      html, body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      body { min-height: 100vh; padding: 16px 12px 32px; }
+
+      .app { width: min(100%, 640px); margin: 0 auto; }
+
+      /* --- header ---------------------------------------------------- */
+
+      .topbar {
+        background: var(--primary-dark);
+        color: #fff;
+        border: 1px solid var(--primary-darker);
+        border-radius: 4px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 500;
+      }
+
+      .subtitle {
+        margin: 2px 0 0;
+        font-size: .875rem;
+        color: rgba(255, 255, 255, .85);
+      }
+
+      .lang {
+        flex: 0 0 auto;
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, .65);
+        border-radius: 4px;
+        padding: 5px 12px;
+        font-size: .8125rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .lang:hover { background: rgba(255, 255, 255, .12); }
+
+      /* --- cards ----------------------------------------------------- */
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        margin: 0 0 16px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--muted);
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      /* --- form ------------------------------------------------------ */
+
+      .field { margin-bottom: 16px; }
+
+      label, .field-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: .875rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      input, select {
+        display: block;
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 1rem;
+        font-family: inherit;
+        line-height: 1.5;
+        color: var(--text);
+        background: #fff;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+      }
+      input:focus, select:focus {
+        outline: 0;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, .25);
+      }
+      input::placeholder { color: #adb5bd; }
+
+      button { font-family: inherit; font-size: 1rem; line-height: 1.5; cursor: pointer; }
+
+      .primary-btn, .secondary-btn, .danger-btn {
+        display: block;
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .primary-btn { background: var(--primary); border-color: var(--primary); }
+      .primary-btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+      .secondary-btn { background: var(--secondary); border-color: var(--secondary); }
+      .secondary-btn:hover { background: var(--secondary-dark); border-color: var(--secondary-dark); }
+
+      .danger-btn { background: #fff; color: var(--danger); border-color: var(--danger); }
+      .danger-btn:hover { background: var(--danger); color: #fff; }
+
+      .primary-btn:disabled, .secondary-btn:disabled, .danger-btn:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+      }
+
+      /* Flex rather than two fixed columns: ARRIVED is hidden except while
+         the rider is called, and Release must fill the row on its own
+         instead of sitting at half width beside a gap. */
+      .button-row { display: flex; gap: 10px; margin-top: 16px; }
+      .button-row > button { flex: 1 1 0; }
+
+      /* --- station picker: a table, rendered as buttons --------------- */
+
+      .station-list {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .station-option {
+        display: grid;
+        grid-template-columns: 1fr 96px 96px;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 14px;
+        text-align: left;
+        background: #fff;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        color: var(--text);
+      }
+      .station-option:last-child { border-bottom: 0; }
+      .station-option:hover { background: #f8f9fa; }
+      .station-option[aria-pressed="true"] {
+        background: #eaf6ec;
+        box-shadow: inset 3px 0 0 var(--primary);
+      }
+
+      .station-main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .station-name { font-size: 1rem; font-weight: 600; }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 6px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 3px;
+        font-size: .6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+
+      /* Number large, label small: the counts are what get compared. */
+      .station-metric { display: block; text-align: right; }
+      .station-metric strong {
+        display: block;
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+      .station-metric .unit {
+        display: block;
+        font-size: .6875rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .03em;
+      }
+      .station-batteries strong { color: var(--text); }
+      .station-count strong { color: var(--primary-dark); }
+
+      /* --- status card ----------------------------------------------- */
+
+      .status-card { display: none; }
+      .status-card.visible { display: block; }
+
+      .status-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      .status-head h2 { margin: 0; padding: 0; border: 0; }
+
+      /* Flat rectangles, one solid fill each. */
+      .status-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #fff;
+        background: var(--secondary);
+        white-space: nowrap;
+      }
+      .status-pill.waiting  { background: var(--secondary); }
+      .status-pill.called   { background: var(--warning); color: #212529; }
+      .status-pill.arrived  { background: var(--info); }
+      .status-pill.served   { background: var(--primary); }
+      .status-pill.no_show  { background: var(--danger); }
+      .status-pill.released { background: #adb5bd; color: #212529; }
+
+      .info-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+      }
+
+      /* Small label above, value below. Place in line is set much larger
+         than the two beside it: it is the one number a rider is here for. */
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px 14px;
+        border-right: 1px solid var(--line);
+      }
+      .info-item:last-child { border-right: 0; }
+      .info-item > span {
+        font-size: .6875rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+      }
+      .info-item > strong { font-size: 1.125rem; font-weight: 700; }
+      .info-item.primary > strong {
+        font-size: 2.25rem;
+        line-height: 1.1;
+        color: var(--primary-dark);
+      }
+      .plate-value { font-family: "SFMono-Regular", Menlo, Consolas, monospace; }
+
+      /* --- messages -------------------------------------------------- */
+
+      .message { display: none; }
+      .message.visible {
+        display: block;
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        background: #e9ecef;
+        color: #383d41;
+        font-size: .9375rem;
+      }
+      .message.error   { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+      .message.success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+      .message.warn    { background: #fff3cd; border-color: #ffeeba; color: #856404; }
+
+      .hint {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: .8125rem;
+      }
+
+      .muted { color: var(--muted); }
+
+      /* --- SMS notifications ----------------------------------------- */
+      /* Opaque cards, square corners, a flat colour bar down the left edge
+         to say which kind of message it is. */
+
+      .sms-stack {
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+        width: min(calc(100% - 24px), 420px);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+      }
+
+      .sms {
+        pointer-events: auto;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--secondary);
+        border-radius: 4px;
+        box-shadow: var(--shadow);
+        padding: 10px 14px;
+        cursor: pointer;
+        animation: sms-in .18s ease-out;
+      }
+      .sms-reserved { border-left-color: var(--primary); }
+      .sms-called   { border-left-color: var(--warning); }
+      .sms-slipped  { border-left-color: var(--info); }
+      .sms-noShow   { border-left-color: var(--danger); }
+
+      .sms.leaving { animation: sms-out .18s ease-in forwards; }
+
+      @keyframes sms-in  { from { opacity: 0; transform: translateY(-8px); } }
+      @keyframes sms-out { to   { opacity: 0; transform: translateY(-8px); } }
+
+      .sms-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+      .sms-avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: var(--primary-dark);
+        color: #fff;
+        border-radius: 3px;
+        font-size: .625rem;
+        font-weight: 700;
+      }
+      .sms-sender { font-size: .8125rem; font-weight: 700; }
+      .sms-time { margin-left: auto; font-size: .75rem; color: var(--muted); }
+      .sms-body { margin: 0; font-size: .9375rem; }
+      .sms-credit { margin: 6px 0 0; font-size: .6875rem; color: var(--muted); }
+
+      /* --- narrow screens -------------------------------------------- */
+
+      @media (max-width: 480px) {
+        .station-option { grid-template-columns: 1fr 72px 72px; gap: 8px; padding: 10px 12px; }
+        .station-metric strong { font-size: 1.125rem; }
+        .info-list { grid-template-columns: 1fr; }
+        .info-item { border-right: 0; border-bottom: 1px solid var(--line); }
+        .info-item:last-child { border-bottom: 0; }
+        .button-row { flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="smsStack" class="sms-stack" role="status" aria-live="polite"></div>
+
+    <main class="app">
+      <header class="topbar">
+        <div class="topline">
+          <div>
+            <h1 class="brand">SharijaVuba</h1>
+            <p class="subtitle" data-i18n="rider.subtitle">Battery swap queue</p>
+          </div>
+          <button id="langToggle" class="lang" type="button">EN</button>
+        </div>
+      </header>
+
+      <section class="card" aria-labelledby="reserve-heading">
+        <h2 id="reserve-heading" data-i18n="rider.reserveHeading">Reserve a slot</h2>
+
+        <form id="reserveForm">
+          <div class="field">
+            <label for="plateNumber" data-i18n="rider.plateNumber">Plate number</label>
+            <input id="plateNumber" name="plateNumber" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="RAC 123B" required />
+          </div>
+
+          <!-- Battery type sits above the station list because the list is
+               filtered by it: changing the type rebuilds the stations. -->
+          <div class="field">
+            <label for="batteryType" data-i18n="rider.batteryType">Battery type</label>
+            <select id="batteryType" name="batteryType" required></select>
+          </div>
+
+          <div class="field">
+            <span class="field-label" data-i18n="rider.station">Station</span>
+            <div id="stationList" class="station-list" role="group"></div>
+            <select id="stationSelect" name="stationSelect" hidden>
+              <option value="" data-i18n="rider.chooseStation">Choose a station</option>
+            </select>
+          </div>
+
+          <button id="reserveButton" class="primary-btn" type="submit" data-i18n="rider.reserveButton">Reserve my slot</button>
+        </form>
+        <p class="hint"><span data-i18n="rider.hintStation">Pick your station.</span> <span data-i18n="rider.hintPlate">The plate you see back is the one saved.</span></p>
+      </section>
+
+      <section id="statusCard" class="card status-card" aria-live="polite">
+        <div class="status-head">
+          <h2 data-i18n="rider.yourQueue">Your queue</h2>
+          <span id="statusPill" class="status-pill waiting">Waiting</span>
+        </div>
+
+        <div class="info-list">
+          <div class="info-item primary"><span data-i18n="rider.placeInLine">Place in line</span><strong id="placeValue">-</strong></div>
+          <div class="info-item"><span data-i18n="rider.plate">Plate</span><strong id="plateValue" class="plate-value">-</strong></div>
+          <div class="info-item"><span data-i18n="rider.status">Status</span><strong id="statusValue">-</strong></div>
+        </div>
+
+        <div class="button-row">
+          <button id="arrivedButton" class="secondary-btn" type="button" hidden data-i18n="rider.arrivedButton">ARRIVED</button>
+          <button id="releaseButton" class="danger-btn" type="button" data-i18n="rider.releaseButton">Release slot</button>
+        </div>
+      </section>
+
+      <div id="message" class="message" aria-live="polite"></div>
+    </main>
+
+    <script src="../strings.rw.js"></script>
+    <script>
+      // Where the API lives. Defaults to the deployed instance, the same
+      // choice ussd/ussd.mjs already makes, so this file works opened
+      // straight from disk with nothing running locally. A stale local
+      // server on port 3000 was the reason the battery counts read '-': it
+      // answers, but predates the column, so batteries_available simply was
+      // not in the response.
+      //
+      // For a local backend, open the page as:
+      //   index.html?api=http://localhost:3000
+      const BASE_URL = (new URLSearchParams(location.search).get('api')
+        || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+          ? 'http://localhost:3000'
+          : 'https://sharijavuba-backend.onrender.com')).replace(/\/+$/, '');
+
+      // --- language ----------------------------------------------------
+      // Strings come from the generated strings.rw.js at the repo root.
+      // Any id without an entry falls back to the English already written
+      // into the markup and the code, so a gap degrades to English rather
+      // than to a blank screen.
+      const STRINGS = window.SHARIJAVUBA_STRINGS || {};
+      let lang = localStorage.getItem('sharijavuba.lang') || 'rw';
+
+      function t(id, english) {
+        const entry = STRINGS[id];
+        if (lang === 'rw' && entry && entry.rw) return entry.rw;
+        if (english !== undefined) return english;
+        return entry ? entry.en : id;
+      }
+
+      function statusLabel(status) {
+        return t('status.' + status, String(status).replace('_', ' '));
+      }
+
+      // Remember each element's original English once, so switching back
+      // is exact rather than a re-translation.
+      function applyLanguage() {
+        for (const el of document.querySelectorAll('[data-i18n]')) {
+          if (el.dataset.en === undefined) el.dataset.en = el.textContent;
+          el.textContent = t(el.dataset.i18n, el.dataset.en);
+        }
+        document.documentElement.lang = lang;
+        const btn = document.getElementById('langToggle');
+        if (btn) btn.textContent = lang === 'rw' ? 'EN' : 'RW';
+        if (state.claim) renderClaim(state.claim);
+      }
+      const state = {
+        claimId: sessionStorage.getItem('sharijavuba.claimId') || null,
+        claim: (() => {
+          const saved = sessionStorage.getItem('sharijavuba.claim');
+          try {
+            return saved ? JSON.parse(saved) : null;
+          } catch (err) {
+            return null;
+          }
+        })(),
+      };
+
+      // An idempotency key belongs to one attempt, not to the session. It is
+      // held here only while a request is in flight without an answer, so a
+      // retry after a dropped connection is recognized as the same request.
+      // The moment the server answers, the key is spent: keeping it would
+      // make the next reservation look like a repeat of the last one and
+      // come back alreadyProcessed instead of creating a claim.
+      let pendingReserveEventId = null;
+      let pendingArrivedEventId = null;
+
+      // Left over from when the keys were persisted; clear them so an open
+      // tab from before this change does not keep replaying an old request.
+      sessionStorage.removeItem('sharijavuba.reserveEventId');
+      sessionStorage.removeItem('sharijavuba.arrivedEventId');
+
+      // A request that never got an answer may be retried under the same
+      // key. One that was answered, success or refusal, must not be.
+      function keyIsSpent(error) {
+        return !error || error.status !== undefined;
+      }
+
+      const reserveForm = document.getElementById('reserveForm');
+      const plateNumberInput = document.getElementById('plateNumber');
+      const stationSelect = document.getElementById('stationSelect');
+      const stationList = document.getElementById('stationList');
+      const batteryTypeSelect = document.getElementById('batteryType');
+      const statusCard = document.getElementById('statusCard');
+      const statusPill = document.getElementById('statusPill');
+      const plateValue = document.getElementById('plateValue');
+      const placeValue = document.getElementById('placeValue');
+      const statusValue = document.getElementById('statusValue');
+      const arrivedButton = document.getElementById('arrivedButton');
+      const releaseButton = document.getElementById('releaseButton');
+      const messageEl = document.getElementById('message');
+
+      function setMessage(text, type = 'info') {
+        messageEl.textContent = text || '';
+        messageEl.className = 'message visible';
+        if (type === 'error') {
+          messageEl.classList.add('error');
+        } else if (type === 'success') {
+          messageEl.classList.add('success');
+        } else if (type === 'warn') {
+          messageEl.classList.add('warn');
+        }
+      }
+
+      function uuidv4() {
+        if (crypto && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+          const random = Math.random() * 16 | 0;
+          const value = char === 'x' ? random : (random & 0x3 | 0x8);
+          return value.toString(16);
+        });
+      }
+
+      function isValidUuid(value) {
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(String(value || '').trim());
+      }
+
+      function normalizePlate(value) {
+        return String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+      }
+
+      // battery_type is free text on claims with no reference table, so the
+      // only safe list is the one the station app builds from the same
+      // endpoint. Hardcoding extra types here put riders into queues no
+      // attendant could see, because the station picker only ever offers
+      // types that already exist.
+      async function loadBatteryTypes() {
+        let types = ['standard'];
+        try {
+          const used = await requestJson('/battery-types');
+          if (used && used.length) {
+            types = used.includes('standard') ? used : ['standard'].concat(used);
+          }
+        } catch (error) {
+          // Fall through to the default; loadStations reports the outage.
+        }
+
+        batteryTypeSelect.innerHTML = types
+          .map((type) => '<option value="' + type + '">' + type + '</option>')
+          .join('');
+      }
+
+      // Every station's queue length, refreshed whenever the battery type
+      // changes. Deliberately a count and nothing more: turning it into
+      // "about 12 minutes" would be inventing a number, since nothing here
+      // measures how long a swap actually takes.
+      let stationSummary = [];
+
+      // What the station list was last built from. Compared on every poll so
+      // the markup is only rebuilt when a rider would see a difference.
+      let lastStationSignature = null;
+
+      async function loadStations() {
+        try {
+          stationSummary = await requestJson('/stations/summary');
+          renderStationList();
+        } catch (error) {
+          stationList.innerHTML = '';
+          setMessage(t('station.apiUnreachable', 'Could not reach the server. Is the backend running?'), 'error');
+        }
+      }
+
+      function renderStationList() {
+        const batteryType = batteryTypeSelect.value;
+        const rows = stationSummary
+          .filter((row) => row.battery_type === batteryType)
+          .sort((a, b) => a.in_queue - b.in_queue || a.name.localeCompare(b.name));
+
+        if (!rows.length) {
+          stationList.innerHTML = '';
+          stationSelect.innerHTML = '';
+          setMessage(t('station.noStationsError', 'There are no stations yet.'), 'warn');
+          return;
+        }
+
+        // Every station tied for the shortest queue is recommended, not just
+        // whichever happened to sort first. Picking one of a tie would imply
+        // a difference that the count does not show.
+        const shortest = rows[0].in_queue;
+
+        // Read the chosen id BEFORE anything is rebuilt. Writing innerHTML
+        // on the select resets its value to the first option, so comparing
+        // against stationSelect.value afterwards would compare against the
+        // default and silently drop the rider's choice. Harmless while this
+        // ran only at load; now that it runs on every poll it would reset
+        // the selection every few seconds.
+        const chosen = stationSelect.value;
+
+        // Rebuilding the markup on every poll would fight the rider for the
+        // list they are tapping. Only touch the DOM when something a rider
+        // can actually see has changed.
+        const signature = JSON.stringify(
+          rows.map((row) => [row.station_id, row.name, row.in_queue, row.batteries_available])
+        ) + '|' + chosen + '|' + lang;
+        if (signature === lastStationSignature) return;
+        lastStationSignature = signature;
+
+        stationList.innerHTML = rows
+          .map((row) => {
+            const recommended = row.in_queue === shortest;
+            // The attendant's own rack count, straight from the summary
+            // endpoint. Shown as a dash rather than 0 when the field is
+            // missing, so an old backend reads as "not reported" instead of
+            // as a station with nothing left.
+            const batteries = row.batteries_available === undefined || row.batteries_available === null
+              ? '-'
+              : row.batteries_available;
+            return (
+              '<button type="button" class="station-option" data-station="' + row.station_id + '"' +
+              ' aria-pressed="' + (row.station_id === chosen) + '">' +
+              '<span class="station-main">' +
+              '<span class="station-name">' + row.name + '</span>' +
+              (recommended ? '<span class="badge">' + t('rider.recommended', 'Recommended') + '</span>' : '') +
+              '</span>' +
+              '<span class="station-metric station-batteries"><strong>' + batteries + '</strong>' +
+              '<span class="unit">' + t('rider.batteries', 'batteries') + '</span></span>' +
+              '<span class="station-metric station-count"><strong>' + row.in_queue + '</strong>' +
+              '<span class="unit">' + t('rider.inQueue', 'in the queue') + '</span></span>' +
+              '</button>'
+            );
+          })
+          .join('');
+
+        // The hidden select stays the single source of the chosen id, so
+        // the reserve handler and its validation are untouched.
+        stationSelect.innerHTML = rows
+          .map((row) => '<option value="' + row.station_id + '">' + row.name + '</option>')
+          .join('');
+        stationSelect.value = rows.some((row) => row.station_id === chosen)
+          ? chosen
+          : rows[0].station_id;
+        markSelectedStation();
+      }
+
+      function markSelectedStation() {
+        for (const button of stationList.querySelectorAll('[data-station]')) {
+          button.setAttribute('aria-pressed', String(button.dataset.station === stationSelect.value));
+        }
+      }
+
+      function readStoredRiderId() {
+        const saved = localStorage.getItem('sharijavuba.riderId');
+        if (saved && isValidUuid(saved)) {
+          return saved;
+        }
+
+        const fresh = uuidv4();
+        localStorage.setItem('sharijavuba.riderId', fresh);
+        return fresh;
+      }
+
+      // --- notifications ------------------------------------------------
+      // Bodies are pre-translated in strings.rw.json and only filled in
+      // here, so nothing calls a translation API at runtime.
+      const NOTIFICATIONS = {
+        reserved: 'Booked. Plate {plate}, you are number {place} in the queue.',
+        called: 'It is your turn. Come to the station now with plate {plate}.',
+        slipped: 'You missed your turn. You are still in the queue, now number {place}.',
+        noShow: 'Your slot has expired. Take a new slot when you are ready.',
+      };
+
+      const SMS_VISIBLE_MS = 9000;
+
+      function dismissSms(card) {
+        if (card.dataset.leaving) return;
+        card.dataset.leaving = '1';
+        card.classList.add('leaving');
+        card.addEventListener('animationend', () => card.remove(), { once: true });
+        setTimeout(() => card.remove(), 600);
+      }
+
+      function showSms(body, kind) {
+        const card = document.createElement('article');
+        card.className = kind ? 'sms sms-' + kind : 'sms';
+
+        const head = document.createElement('div');
+        head.className = 'sms-head';
+
+        const avatar = document.createElement('span');
+        avatar.className = 'sms-avatar';
+        avatar.textContent = 'SV';
+        avatar.setAttribute('aria-hidden', 'true');
+
+        const sender = document.createElement('span');
+        sender.className = 'sms-sender';
+        sender.textContent = 'SharijaVuba';
+
+        const time = document.createElement('span');
+        time.className = 'sms-time';
+        time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        head.append(avatar, sender, time);
+
+        const text = document.createElement('p');
+        text.className = 'sms-body';
+        text.textContent = body;
+
+        card.append(head, text);
+
+        // The credit belongs to the Kinyarwanda wording, so it is only
+        // truthful while the Kinyarwanda wording is what is on screen.
+        if (lang === 'rw') {
+          const credit = document.createElement('p');
+          credit.className = 'sms-credit';
+          credit.textContent = 'Kinyarwanda by EjoChat';
+          card.appendChild(credit);
+        }
+
+        card.addEventListener('click', () => dismissSms(card));
+        document.getElementById('smsStack').prepend(card);
+        setTimeout(() => dismissSms(card), SMS_VISIBLE_MS);
+      }
+
+      function notify(kind, claim) {
+        const template = t('notif.' + kind, NOTIFICATIONS[kind]);
+        const place = claim && claim.place_in_line !== undefined && claim.place_in_line !== null
+          ? claim.place_in_line
+          : '-';
+        showSms(
+          template
+            .replace('{plate}', (claim && claim.plate_number) || '')
+            .replace('{place}', place),
+          kind
+        );
+      }
+
+      // --- polling ------------------------------------------------------
+      // The sweep changes a claim server-side with no request from the
+      // rider, so slip-backs and no-shows only surface by asking.
+      const POLL_MS = 5000;
+      const CONCLUDED = ['served', 'no_show', 'released'];
+      let pollTimer = null;
+      let lastStatus = null;
+
+      // One interval for the whole page, started at load and never restarted.
+      // Each tick refreshes the station counts, and follows the active claim
+      // only while there is one, so a concluded claim stops being polled
+      // without stopping the timer that keeps the battery counts fresh.
+      //
+      // The counts come from /stations/summary, which already carries
+      // batteries_available for every station. Hanging them off
+      // /claims/:claimId instead would not work: that endpoint describes one
+      // claim, while the picker needs every station, and the claim poll only
+      // runs once a claim exists — which is after the rider has chosen, not
+      // while they are choosing.
+      function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(poll, POLL_MS);
+      }
+
+      async function poll() {
+        await loadStations();
+        if (state.claimId && isValidUuid(state.claimId)) await pollClaim();
+      }
+
+      async function pollClaim() {
+        // No claim to follow. The shared timer keeps running; only the
+        // claim half of the tick is skipped.
+        if (!state.claimId || !isValidUuid(state.claimId)) return;
+
+        try {
+          const payload = await requestJson('/claims/' + state.claimId);
+          const claim = payload && payload.claim;
+          if (claim && claim.claim_id) applyClaimUpdate(claim);
+        } catch (error) {
+          // A dropped poll is not worth shouting about; the next one retries.
+        }
+      }
+
+      function applyClaimUpdate(claim) {
+        const previous = lastStatus;
+        persistClaim(claim);
+        renderClaim(claim);
+
+        if (previous && previous !== claim.status) {
+          if (claim.status === 'called') notify('called', claim);
+          else if (claim.status === 'waiting' && previous === 'called') notify('slipped', claim);
+          else if (claim.status === 'no_show') notify('noShow', claim);
+        }
+
+        lastStatus = claim.status;
+        if (CONCLUDED.includes(claim.status)) {
+          // clearStoredClaim empties claimId, which is what stops the claim
+          // half of the tick. The timer itself stays up for the counts.
+          // The notification above already told the rider what happened.
+          clearStoredClaim();
+        }
+      }
+
+      function persistClaim(claim) {
+        state.claimId = claim.claim_id;
+        state.claim = claim;
+        sessionStorage.setItem('sharijavuba.claimId', claim.claim_id);
+        sessionStorage.setItem('sharijavuba.claim', JSON.stringify(claim));
+      }
+
+      // A served, released or no_show claim is finished. Dropping it stops
+      // it sitting in "Your queue" after the rider has moved on, and stops a
+      // reload resurrecting it.
+      function clearStoredClaim() {
+        state.claimId = null;
+        state.claim = null;
+        lastStatus = null;
+        sessionStorage.removeItem('sharijavuba.claimId');
+        sessionStorage.removeItem('sharijavuba.claim');
+        statusCard.classList.remove('visible');
+      }
+
+      function setStatusClass(status) {
+        const normalized = String(status || 'waiting').toLowerCase();
+        statusPill.className = 'status-pill ' + normalized;
+        statusPill.textContent = statusLabel(normalized || 'waiting');
+      }
+
+      function updateActionButtons(status) {
+        const current = String(status || '').toLowerCase();
+        const releasable = current === 'waiting' || current === 'called';
+        releaseButton.disabled = !releasable;
+        arrivedButton.hidden = current !== 'called';
+      }
+
+      function renderClaim(claim) {
+        if (!claim) {
+          return;
+        }
+
+        state.claim = claim;
+        const plate = claim.plate_number || normalizePlate(plateNumberInput.value || '');
+        // place_in_line is the rider's actual 1, 2, 3 in this queue. Never
+        // show claim.position: that is a sequence shared by every station,
+        // so its values interleave between queues and jump. The API sends
+        // place_in_line as null once the claim leaves the line.
+        const placeInLine = claim.place_in_line !== undefined && claim.place_in_line !== null
+          ? claim.place_in_line
+          : '—';
+
+        plateValue.textContent = plate;
+        placeValue.textContent = placeInLine;
+        statusValue.textContent = statusLabel(claim.status || 'waiting');
+        setStatusClass(claim.status || 'waiting');
+        updateActionButtons(claim.status || 'waiting');
+        statusCard.classList.add('visible');
+      }
+
+      function parseClaimPayload(payload) {
+        if (!payload) {
+          return null;
+        }
+        if (payload.alreadyProcessed === true) {
+          return { alreadyProcessed: true };
+        }
+        if (payload.claim && typeof payload.claim === 'object') {
+          return payload.claim;
+        }
+        if (payload.claim_id || payload.status || payload.plate_number) {
+          return payload;
+        }
+        return null;
+      }
+
+      async function requestJson(path, options = {}) {
+        const response = await fetch(BASE_URL + path, {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {}),
+          },
+          ...options,
+        });
+
+        const text = await response.text();
+        const payload = text ? JSON.parse(text) : null;
+
+        if (!response.ok) {
+          const error = new Error(payload && payload.error ? payload.error : 'Request failed');
+          error.status = response.status;
+          error.payload = payload;
+          throw error;
+        }
+
+        return payload;
+      }
+
+      async function reserveClaim(event) {
+        event.preventDefault();
+
+        const plate = normalizePlate(plateNumberInput.value);
+        const riderId = readStoredRiderId();
+        const stationId = stationSelect.value;
+        const batteryType = batteryTypeSelect.value;
+
+        if (!plate) {
+          setMessage(t('rider.errNoPlate', 'Write your plate number first.'), 'error');
+          plateNumberInput.focus();
+          return;
+        }
+
+        if (!isValidUuid(stationId)) {
+          setMessage(t('rider.errNoStation', 'Choose a station first.'), 'error');
+          stationSelect.focus();
+          return;
+        }
+
+        const eventId = pendingReserveEventId || uuidv4();
+        pendingReserveEventId = eventId;
+
+        try {
+          const payload = await requestJson('/claims', {
+            method: 'POST',
+            body: JSON.stringify({
+              rider_id: riderId,
+              station_id: stationId,
+              battery_type: batteryType,
+              plate_number: plate,
+              event_id: eventId,
+            }),
+          });
+
+          if (payload && payload.alreadyProcessed === true) {
+            if (state.claimId && isValidUuid(state.claimId) && state.claim) {
+              renderClaim(state.claim);
+              setMessage('This request was already applied. Showing the last stored claim.', 'success');
+              return;
+            }
+            setMessage('This request was already processed, but no claim is stored on this device. Keep the earlier success response.', 'warn');
+            return;
+          }
+
+          const claim = parseClaimPayload(payload);
+          if (!claim || !claim.claim_id) {
+            setMessage('The server did not return a claim for this reservation.', 'error');
+            return;
+          }
+
+          pendingReserveEventId = null;
+          persistClaim(claim);
+          renderClaim(claim);
+          lastStatus = claim.status;
+          notify('reserved', claim);
+          startPolling();
+          loadStations();
+          setMessage(t('rider.msgReserved', 'Your slot is reserved.'), 'success');
+        } catch (error) {
+          if (keyIsSpent(error)) pendingReserveEventId = null;
+          const message = error && error.payload && error.payload.error ? error.payload.error : error.message;
+          setMessage(message || t('rider.errReserveFailed', 'Could not book a slot. Try again.'), 'error');
+        }
+      }
+
+      async function arrived() {
+        if (!state.claimId || !isValidUuid(state.claimId)) {
+          setMessage('No active claim is available to mark as arrived.', 'error');
+          return;
+        }
+
+        const eventId = pendingArrivedEventId || uuidv4();
+        pendingArrivedEventId = eventId;
+
+        try {
+          const payload = await requestJson('/claims/' + state.claimId + '/arrived', {
+            method: 'POST',
+            body: JSON.stringify({ event_id: eventId }),
+          });
+
+          const claim = parseClaimPayload(payload);
+          if (claim && claim.alreadyProcessed === true) {
+            setMessage('ARRIVED was already recorded for this claim.', 'success');
+            return;
+          }
+
+          if (claim && claim.claim_id) {
+            pendingArrivedEventId = null;
+            persistClaim(claim);
+            renderClaim(claim);
+            lastStatus = claim.status;
+            setMessage(t('rider.msgArrived', 'You have checked in at the station.'), 'success');
+            return;
+          }
+
+          setMessage('The server responded without a claim object while marking your arrival.', 'warn');
+        } catch (error) {
+          if (keyIsSpent(error)) pendingArrivedEventId = null;
+          const message = error && error.payload && error.payload.error ? error.payload.error : error.message;
+          setMessage(message || 'Unable to confirm your arrival right now.', 'error');
+        }
+      }
+
+      async function releaseClaim() {
+        if (!state.claimId || !isValidUuid(state.claimId)) {
+          setMessage('No active claim is available to release.', 'error');
+          return;
+        }
+
+        try {
+          const payload = await requestJson('/claims/' + state.claimId + '/release', {
+            method: 'POST',
+          });
+
+          const claim = parseClaimPayload(payload);
+          if (claim && claim.claim_id) {
+            persistClaim(claim);
+            renderClaim(claim);
+            clearStoredClaim();
+            setMessage(t('rider.msgReleased', 'Your slot has been released.'), 'success');
+            return;
+          }
+
+          if (claim && claim.alreadyProcessed === true) {
+            setMessage('This release was already processed.', 'success');
+            return;
+          }
+
+          setMessage('The release request succeeded but no updated claim was returned.', 'warn');
+        } catch (error) {
+          const message = error && error.payload && error.payload.error ? error.payload.error : error.message;
+          setMessage(message || 'Unable to release your slot right now.', 'error');
+        }
+      }
+
+      function hydrateSavedClaim() {
+        if (!state.claimId || !isValidUuid(state.claimId) || !state.claim) {
+          return;
+        }
+
+        if (CONCLUDED.includes(state.claim.status)) {
+          clearStoredClaim();
+          return;
+        }
+
+        renderClaim(state.claim);
+        // Seed the baseline from what was already on screen, otherwise the
+        // first poll after a reload would replay an old status as new.
+        lastStatus = state.claim.status;
+        setMessage(t('rider.msgShowingSaved', 'Showing your last saved slot.'), 'info');
+        startPolling();
+      }
+
+      reserveForm.addEventListener('submit', reserveClaim);
+      arrivedButton.addEventListener('click', arrived);
+      releaseButton.addEventListener('click', releaseClaim);
+
+      stationList.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-station]');
+        if (!button) return;
+        stationSelect.value = button.dataset.station;
+        markSelectedStation();
+      });
+
+      // Queue lengths are per battery type, so the list is rebuilt on change.
+      batteryTypeSelect.addEventListener('change', renderStationList);
+
+      document.getElementById('langToggle').addEventListener('click', () => {
+        lang = lang === 'rw' ? 'en' : 'rw';
+        localStorage.setItem('sharijavuba.lang', lang);
+        applyLanguage();
+      });
+
+      // Generated once per device and reused silently; riders never see it.
+      readStoredRiderId();
+      applyLanguage();
+      // Started here rather than after a reservation, so the battery and
+      // queue counts stay live while the rider is still choosing a station,
+      // which is when they are being used to choose.
+      loadBatteryTypes().then(loadStations).then(startPolling);
+
+      if (state.claimId && state.claim) {
+        hydrateSavedClaim();
+      }
+    </script>
+  </body>
+</html>
