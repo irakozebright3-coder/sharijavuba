@@ -1,19 +1,34 @@
 # SharijaVuba API
 
 The contract for the rider and station front ends. Every endpoint below was
-read from the route definitions in [`backend/server.js`](backend/server.js)
-and the queue modules they call, and every status code and body shape was
-verified against a running server. Nothing here is inferred.
+read from the route definitions in [`backend/app.js`](backend/app.js) and the
+queue modules they call, and every status code and body shape was verified
+against a running server. Nothing here is inferred.
 
 Base URL: `http://localhost:3000` (`PORT` env var, defaults to `3000`).
+
+On Vercel the same routes are served under `/api`, from the one function in
+[`api/[...path].js`](api/%5B...path%5D.js), which strips that prefix and hands
+the request to `backend/app.js`. So `/stations` locally is `/api/stations` in
+production, and the front ends default to the same origin for exactly that
+reason. `?api=https://host` still points a page at any other backend.
 
 All request bodies are JSON and need `Content-Type: application/json`.
 There is no authentication and no rate limiting.
 
-CORS is wide open: every response carries `Access-Control-Allow-Origin: *`,
-and `OPTIONS` preflights return `204`. That exists so the station app can be
-opened straight from disk (`file://`, which reports an origin of `null`). It
-needs an allowlist before the API is reachable from anywhere but a laptop.
+CORS is wide open when `FRONTEND_ORIGINS` is unset: every response carries
+`Access-Control-Allow-Origin: *`, and `OPTIONS` preflights return `204`. That
+exists so the station app can be opened straight from disk (`file://`, which
+reports an origin of `null`), and it is not needed at all on Vercel, where the
+apps and the API share an origin. Set `FRONTEND_ORIGINS` to a comma-separated
+list to restrict it.
+
+`/cron/sweep` is the one route that can require a secret, because it is the
+only one an outside scheduler may call: with `CRON_SECRET` set it needs
+`Authorization: Bearer <secret>`, and with it unset the route answers `503`
+rather than standing open. On Vercel the sweep also runs by itself on incoming
+traffic, so this endpoint is only for keeping it going while nobody has an app
+open.
 
 ## Endpoint summary
 
@@ -29,6 +44,7 @@ needs an allowlist before the API is reachable from anywhere but a laptop.
 | POST | `/claims/:claimId/arrived` | Rider taps ARRIVED | `200` |
 | POST | `/claims/:claimId/served` | Attendant confirms the swap | `200` |
 | POST | `/claims/:claimId/release` | Rider gives up their slot | `200` |
+| POST | `/cron/sweep` | Run the slip/no-show ladder now (needs `CRON_SECRET`) | `200` |
 
 ### place_in_line
 

@@ -3,9 +3,20 @@ import 'dotenv/config';
 import { randomUUID } from 'crypto';
 import { newDb } from 'pg-mem';
 
+const connectionString = process.env.DATABASE_URL;
+
 // Set DEMO_DATABASE=true for a fully local, disposable development setup.
-// Production continues to use DATABASE_URL exactly as before.
-export const usingDemoDatabase = process.env.DEMO_DATABASE === 'true';
+// A deploy with no DATABASE_URL at all falls back to the same thing rather
+// than crashing: an empty Vercel project should serve the apps and say so,
+// not return 500s. Production sets DATABASE_URL and never comes near this.
+export const usingDemoDatabase = process.env.DEMO_DATABASE === 'true' || !connectionString;
+
+if (!connectionString && process.env.DEMO_DATABASE !== 'true') {
+  console.warn(
+    'DATABASE_URL is not set: using the in-memory demo database. Data is not ' +
+      'persisted, and on a serverless host each instance has its own copy.'
+  );
+}
 
 function createDemoPool() {
   const db = newDb();
@@ -63,6 +74,33 @@ function createDemoPool() {
   return new Pool();
 }
 
+/**
+ * Managed Postgres (Neon, Supabase, Render) needs TLS; a local socket does
+ * not. Deriving it from the host instead of asking for another env var
+ * means the same DATABASE_URL works in both places. PGSSL=disable is the
+ * escape hatch for a host that terminates TLS somewhere else.
+ */
+function poolConfig(url) {
+  const isLocal = /(^|@|\/\/)(localhost|127\.0\.0\.1|\[::1\])/.test(url);
+  const serverless = Boolean(process.env.VERCEL);
+
+  return {
+    connectionString: url,
+    ssl: isLocal || process.env.PGSSL === 'disable' ? undefined : { rejectUnauthorized: false },
+    // A serverless instance should hold one connection, not a pool of ten:
+    // the function may be frozen at any moment and every extra idle
+    // connection is one the database keeps paying for. Point this at the
+    // provider's pooler connection string (Neon's `-pooler` host) so
+    // parallel functions share connections instead of opening their own.
+    max: Number(process.env.PG_POOL_MAX || (serverless ? 1 : 10)),
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+    // Lets a function finish and freeze once its client is idle, instead of
+    // holding the invocation open until the timeout.
+    allowExitOnIdle: serverless,
+  };
+}
+
 export const pool = usingDemoDatabase
   ? createDemoPool()
-  : new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  : new pg.Pool(poolConfig(connectionString));

@@ -326,16 +326,18 @@
 
 <script src="../strings.rw.js"></script>
 <script>
-// Where the API lives. Defaults to the deployed instance, the same choice
-// ussd/ussd.mjs already makes, so this file works opened straight from disk
-// with nothing running locally.
+// Where the API lives. On a deployed origin it is the same site at /api,
+// the Vercel function in api/[...path].js: one deploy, no CORS. Locally it
+// is the Express server on port 3000, so this page also works opened
+// straight from disk.
 //
-// For a local backend, open the page as:
-//   index.html?api=http://localhost:3000
-const API = (new URLSearchParams(location.search).get('api')
+// A backend somewhere else (Render, a phone on the LAN) still works:
+//   index.html?api=https://sharijavuba-backend.onrender.com
+const API_OVERRIDE = new URLSearchParams(location.search).get('api');
+const API = (API_OVERRIDE
   || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
-    : 'https://sharijavuba-backend.onrender.com')).replace(/\/+$/, '');
+    : '/api')).replace(/\/+$/, '');
 const POLL_MS = 3000;
 
 // localStorage throws outright on some origins (file:// under a strict

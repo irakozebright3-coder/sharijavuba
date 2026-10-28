@@ -466,19 +466,18 @@
 
     <script src="../strings.rw.js"></script>
     <script>
-      // Where the API lives. Defaults to the deployed instance, the same
-      // choice ussd/ussd.mjs already makes, so this file works opened
-      // straight from disk with nothing running locally. A stale local
-      // server on port 3000 was the reason the battery counts read '-': it
-      // answers, but predates the column, so batteries_available simply was
-      // not in the response.
+      // Where the API lives. On a deployed origin it is the same site at
+      // /api, which is the Vercel function in api/[...path].js: one deploy,
+      // no CORS, nothing to keep in sync. Locally it is the Express server
+      // on port 3000, so this page also works opened straight from disk.
       //
-      // For a local backend, open the page as:
-      //   index.html?api=http://localhost:3000
-      const BASE_URL = (new URLSearchParams(location.search).get('api')
+      // A backend somewhere else (Render, a phone on the LAN) still works:
+      //   index.html?api=https://sharijavuba-backend.onrender.com
+      const API_OVERRIDE = new URLSearchParams(location.search).get('api');
+      const BASE_URL = (API_OVERRIDE
         || (location.hostname === 'localhost' || location.hostname === '127.0.0.1'
           ? 'http://localhost:3000'
-          : 'https://sharijavuba-backend.onrender.com')).replace(/\/+$/, '');
+          : '/api')).replace(/\/+$/, '');
 
       // --- language ----------------------------------------------------
       // Strings come from the generated strings.rw.js at the repo root.

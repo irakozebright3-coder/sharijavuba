@@ -40,8 +40,15 @@ slot from blocking the queue forever.
   claim that goes quiet past the grace window slips back once and
   returns to `waiting`; one that has already used that chance, or whose
   tail deadline has passed, is closed out as `no_show`.
-- `server.js`, a thin Express wrapper so all of it is runnable and
-  testable right now, with the sweep running on a timer.
+- `app.js`, the Express app: every route, CORS, and the error handler.
+  It starts nothing, so the same routes run on a normal server and as a
+  serverless function.
+- `server.js`, the long-lived entry point (Render, a laptop): `app.js` plus
+  the sweep on a one-minute timer.
+- `queue/opportunisticSweep.js`, the same sweep driven by traffic, throttled
+  to once a minute per instance. Vercel has no timer between requests, so the
+  station app's three-second poll carries it instead; overlapping instances
+  are safe because every decision is re-checked under a row lock.
 
 The tuning constants in `queue/constants.js` (`GRACE_MINUTES`,
 `SLIP_PLACES`, `TAIL_MINUTES`) are unvalidated placeholders from
@@ -50,12 +57,26 @@ section 8 before submission.
 
 ## Setup
 
+From the repository root (the root `package.json` holds the dependencies the
+Vercel function needs; `backend/package.json` is for deploying this folder on
+its own):
+
 ```bash
 npm install
-cp .env.example .env   # fill in your real DATABASE_URL
+cp backend/.env.example .env   # fill in your real DATABASE_URL
 npm run migrate
 npm start
 ```
+
+## Deploying on Vercel
+
+The repository root deploys as one Vercel project: the two static apps plus
+`api/[...path].js`, which is this same Express app. No build step, no second
+service. Set `DATABASE_URL` (a Neon `-pooler` string is the right shape for
+serverless), run `npm run migrate` against it once, and check
+`/api/healthz` reports `database: postgres`. Without `DATABASE_URL` the API
+still answers, on the in-memory demo database that each instance keeps to
+itself.
 
 ## USSD simulator
 
@@ -64,6 +85,8 @@ npm run ussd                                 # against the deployed API
 API_URL=http://localhost:3000 npm run ussd   # against a local backend
 ```
 
+Point it at any deploy with `API_URL`, including a Vercel one
+(`API_URL=https://your-app.vercel.app/api npm run ussd`).
 It defaults to `https://sharijavuba-backend.onrender.com`, so it works from a
 clean checkout with nothing running locally. On the free plan that instance
 sleeps after a quiet spell, so the first screen can take up to a minute to

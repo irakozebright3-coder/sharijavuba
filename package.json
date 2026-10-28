@@ -1,0 +1,23 @@
+{
+  "name": "sharijavuba",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Battery swap queue platform, deployed as static apps plus one serverless API on Vercel.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node dev-server.mjs",
+    "start": "node backend/server.js",
+    "migrate": "node backend/db/migrate.js",
+    "test": "node backend/test/concurrentNext.test.mjs",
+    "ussd": "node backend/ussd/ussd.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.3",
+    "pg-mem": "^3.0.14"
+  }
+}

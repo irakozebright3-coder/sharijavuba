@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/station",
@@ -16,5 +17,11 @@
       "source": "/rider/:path*",
       "destination": "/rider-app/:path*"
     }
-  ]
+  ],
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 30,
+      "memory": 512
+    }
+  }
 }

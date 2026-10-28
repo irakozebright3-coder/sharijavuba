@@ -13,9 +13,20 @@
  *
  *   node test/concurrentNext.test.mjs
  */
-import { pool } from '../db/index.js';
+import { pool, usingDemoDatabase } from '../db/index.js';
 import { callNext } from '../queue/nextClaim.js';
 import { reserveClaim } from '../queue/reserveClaim.js';
+
+// The whole point here is real row locking, which the in-memory demo
+// database does not implement. Refuse loudly rather than run a test that
+// proves nothing.
+if (usingDemoDatabase) {
+  console.error(
+    'This test needs a real PostgreSQL DATABASE_URL: the contention it checks ' +
+      '(FOR UPDATE SKIP LOCKED) does not exist in the demo database.'
+  );
+  process.exit(1);
+}
 
 const ROUNDS = 6;
 const BATTERY = 'concurrency_test';

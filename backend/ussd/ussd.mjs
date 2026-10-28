@@ -3,8 +3,9 @@
  * Every screen is a real HTTP call, so a claim made here is an ordinary
  * claim and appears in the station app like any other.
  *
- *   npm run ussd                                 # the deployed API
- *   API_URL=http://localhost:3000 npm run ussd   # a local backend
+ *   API_URL=https://ADERESI-YA-VERCEL/api npm run ussd   # a Vercel deploy
+ *   API_URL=http://localhost:3000 npm run ussd           # a local backend
+ *   npm run ussd                                         # the Render fallback
  */
 import { createInterface } from 'node:readline/promises';
 import { readFileSync } from 'node:fs';
